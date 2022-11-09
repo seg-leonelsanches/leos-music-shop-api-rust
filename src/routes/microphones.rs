@@ -1,26 +1,10 @@
-use actix_web::{get, post, web, Error, HttpResponse, Responder, Result};
-
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-#[get("/users/{user_id}/{friend}")] // <- define path parameters
-async fn index(path: web::Path<(u32, String)>) -> Result<String> {
-    let (user_id, friend) = path.into_inner();
-    Ok(format!("Welcome {}, user_id {}!", friend, user_id))
-}
+use actix_web::{get, post, web, Error, HttpResponse, Result};
 
 #[get("/microphones")]
-async fn get_all_microphones(pool: web::Data<super::db::DbPool>) -> Result<HttpResponse, Error> {
+async fn get_all_microphones(pool: web::Data<crate::db::DbPool>) -> Result<HttpResponse, Error> {
     let microphones = web::block(move || {
         let mut conn = pool.get()?;
-        crate::actions::find_all_microphones(&mut conn)
+        crate::actions::microphones::find_all_microphones(&mut conn)
     })
     .await?
     .map_err(actix_web::error::ErrorInternalServerError)?;
@@ -39,7 +23,7 @@ async fn get_microphone(
     // use web::block to offload blocking Diesel code without blocking server thread
     let microphone = web::block(move || {
         let mut conn = pool.get()?;
-        crate::actions::find_microphone_by_id(&mut conn, microphone_id)
+        crate::actions::microphones::find_microphone_by_id(&mut conn, microphone_id)
     })
     .await?
     .map_err(actix_web::error::ErrorInternalServerError)?;
@@ -54,16 +38,16 @@ async fn get_microphone(
 
 #[post("/microphones")]
 async fn add_microphone(
-    pool: web::Data<super::db::DbPool>,
+    pool: web::Data<crate::db::DbPool>,
     form: web::Json<crate::models::microphone::NewMicrophone>,
 ) -> Result<HttpResponse, Error> {
     // use web::block to offload blocking Diesel code without blocking server thread
-    let microphone = web::block(move || {
-        let mut conn = pool.get()?;
-        crate::actions::insert_new_microphone(&mut conn, &form.model)
+    web::block(move || {
+        let mut conn = pool.get().unwrap();
+        crate::actions::microphones::insert_new_microphone(&mut conn, &form.model, &form.manufacturer, &form.description)
     })
     .await?
     .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    Ok(HttpResponse::Ok().json(microphone))
+    Ok(HttpResponse::Ok().into())
 }

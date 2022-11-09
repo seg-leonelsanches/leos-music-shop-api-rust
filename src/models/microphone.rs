@@ -16,5 +16,5 @@ pub struct NewMicrophone {
     pub model: String,
     pub manufacturer: String,
     pub description: String,
-    pub main_image: String,
+    pub main_image: Option<String>,
 }

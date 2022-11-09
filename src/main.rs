@@ -45,11 +45,11 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(pool.clone()))
-            .service(routes::hello)
-            .service(routes::echo)
-            .service(routes::get_all_microphones)
-            .service(routes::get_microphone)
-            .service(routes::add_microphone)
+            .service(routes::hello::hello)
+            .service(routes::hello::echo)
+            .service(routes::microphones::get_all_microphones)
+            .service(routes::microphones::get_microphone)
+            .service(routes::microphones::add_microphone)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("127.0.0.1", 7070))?

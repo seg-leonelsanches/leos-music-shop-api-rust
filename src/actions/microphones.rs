@@ -1,4 +1,4 @@
-use diesel::prelude::*;
+use diesel::{prelude::*, result::Error};
 
 use crate::models::microphone;
 
@@ -21,7 +21,6 @@ pub fn find_microphone_by_id(
     conn: &mut SqliteConnection,
     microphone_id: i32,
 ) -> Result<Option<microphone::Microphone>, DbError> {
-//) -> Result<microphone::Microphone, DbError> {
     use crate::schema::microphones::dsl::*;
 
     let microphone = microphones
@@ -36,21 +35,26 @@ pub fn find_microphone_by_id(
 pub fn insert_new_microphone(
     conn: &mut SqliteConnection,
     _model: &str, // prevent collision with `name` column imported inside the function
-) -> Result<crate::models::microphone::Microphone, DbError> {
+    _manufacturer: &str, 
+    _description: &str
+) -> Result<Option<i32>, Error> {
     // It is common when using Diesel with Actix Web to import schema-related
     // modules inside a function's scope (rather than the normal module's scope)
     // to prevent import collisions and namespace pollution.
     use crate::schema::microphones::dsl::*;
 
-    let new_microphone = microphone::Microphone {
+    /* let new_microphone = microphone::Microphone {
         id: Default::default(),
         model: _model.to_owned(),
         manufacturer: "".to_owned(),
         description: "".to_owned(),
         main_image: None
-    };
+    }; */
 
-    diesel::insert_into(microphones).values(&new_microphone).execute(conn)?;
+    // diesel::insert_into(microphones).values(&new_microphone).execute(conn)?;
+    diesel::insert_into(microphones)
+        .values((model.eq(_model.to_owned()), manufacturer.eq(_manufacturer.to_owned()), description.eq(_description.to_owned())))
+        .execute(conn)?;
 
-    Ok(new_microphone)
+    Ok(Some(1))
 }
