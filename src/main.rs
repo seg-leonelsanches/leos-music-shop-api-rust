@@ -42,9 +42,12 @@ async fn main() -> std::io::Result<()> {
         .build(manager)
         .expect("Failed to create pool.");
 
+    let segment_write_key = std::env::var("SEGMENT_WRITE_KEY").expect("SEGMENT_WRITE_KEY");
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(segment_write_key.clone()))
             .service(routes::hello::hello)
             .service(routes::hello::echo)
             .service(routes::microphones::get_all_microphones)
